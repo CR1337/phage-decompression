@@ -1,0 +1,10 @@
+##gff-version 3
+##sequence-region NC_001422.1 1 5386
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	2	136	7.0	+	0	ID=ZGRNZQWV_CDS_0001;transl_table=11;phrog=713;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0001;function=DNA, RNA and nucleotide metabolism;product=DNA replication initiation
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	133	393	-3.7	+	0	ID=ZGRNZQWV_CDS_0002;transl_table=11;phrog=1465;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0002;function=head and packaging;product=terminase
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	390	848	41.1	+	0	ID=ZGRNZQWV_CDS_0003;transl_table=11;phrog=1386;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0003;function=head and packaging;product=head morphogenesis
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	848	964	12.4	+	0	ID=ZGRNZQWV_CDS_0004;transl_table=11;phrog=2354;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0004;function=DNA, RNA and nucleotide metabolism;product=DNA condensation
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	1001	2284	172.0	+	0	ID=ZGRNZQWV_CDS_0005;transl_table=11;phrog=514;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0005;function=head and packaging;product=major head protein
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	2395	2922	58.9	+	0	ID=ZGRNZQWV_CDS_0006;transl_table=11;phrog=1483;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0006;function=head and packaging;product=major spike protein
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	2931	3917	184.8	+	0	ID=ZGRNZQWV_CDS_0007;transl_table=11;phrog=1471;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0007;function=tail;product=pilot protein for DNA ejection
+NC_001422.1	Pyrodigal-gv_0.3.1	CDS	3981	5384	150.3	+	0	ID=ZGRNZQWV_CDS_0008;transl_table=11;phrog=713;top_hit=No_MMseqs_PHROG_hit;locus_tag=ZGRNZQWV_CDS_0008;function=DNA, RNA and nucleotide metabolism;product=DNA replication initiation
