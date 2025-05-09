@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from itertools import zip_longest
 from typing import Generator, List, Tuple
@@ -7,7 +8,7 @@ from matplotlib.patches import Patch
 
 from biotite.sequence import (
     NucleotideSequence, Feature, Location, Annotation,
-    AnnotatedSequence, find_subsequence
+    AnnotatedSequence, find_subsequence, ProteinSequence
 )
 from biotite.sequence.io import fasta, gff
 import biotite.sequence.graphics as graphics
@@ -19,7 +20,10 @@ IN_GFF_FILENAME: str = "phiX.gff"
 
 OUT_FASTA_FILENAME: str = "phiX_decompressed.fasta"
 OUT_GFF_FILENAME: str = "phiX_decompressed.gff"
-PLOT_FILENAME: str = "plot.png"
+
+OUT_PROTEIN_FILENAME: str = "proteins.json"
+
+PLASMID_PLOT_FILENAME: str = "plasmids.png"
 
 
 # Holds parameters for FASTA output
@@ -186,7 +190,7 @@ def store_genome(genome: AnnotatedSequence, fasta_parameters: FastaParameters, g
     gff_file.write(annotation_filename)
 
 
-def plot(genome: AnnotatedSequence, decompressed_genome: AnnotatedSequence, filename: str):
+def plot_plasmids(genome: AnnotatedSequence, decompressed_genome: AnnotatedSequence, filename: str):
     """
     Plot the plasmid maps of compressed and decompressed genomes.
     """
@@ -234,14 +238,52 @@ def plot(genome: AnnotatedSequence, decompressed_genome: AnnotatedSequence, file
     fig.savefig(filename)
 
 
+def translate(genome: AnnotatedSequence) -> List[List[Tuple[ProteinSequence, int, int]]]:
+    """
+    TODO
+    """
+    cds_features = (f for f in genome.annotation._features if f.key == "CDS")
+    protein_sequences = []
+    for feature in cds_features:
+        location = next(iter(feature.locs))
+        sub_sequence = genome.sequence[location.first:location.last+1]
+        aa_sequences, positions = sub_sequence.translate(complete=False)
+        protein_sequences.append(sorted(
+            [
+                (sequence, int(first), int(last)) 
+                for sequence, (first, last) in zip(aa_sequences, positions)
+            ],
+            key=lambda x: len(x[0]),
+            reverse=True
+        ))
+    return protein_sequences
+
+
+def store_protein_sequences(protein_sequences: List[List[Tuple[ProteinSequence, int, int]]], filename: str):
+    """
+    TODO
+    """
+    sequences = [
+        [
+            {'first': first, 'last': last, 'sequence': str(sequence)[:-1]} 
+            for sequence, first, last in sequence_list
+        ]
+        for sequence_list in protein_sequences
+    ]
+    with open(filename, 'w') as file:
+        json.dump(sequences, file, indent=4)
+
+
 def main():
     """
     Full pipeline:
     1. Load compressed genome
     2. Decompress overlapping features
     3. Detect motifs (start/stop codons, RBS)
-    4. Save results
+    4. Save decompressed genome
     5. Generate visualization
+    6. Translate into protein sequences
+    7. Save protein sequences
     """
     genome, fasta_parameters, gff_parameters = load_genome(IN_FASTA_FILENAME, IN_GFF_FILENAME)
     decompressed_genome = de_overlap(genome)
@@ -262,7 +304,13 @@ def main():
     store_genome(decompressed_genome, new_fasta_parameters, gff_parameters, OUT_FASTA_FILENAME, OUT_GFF_FILENAME)
 
     # Generate comparative plot
-    plot(genome, decompressed_genome, PLOT_FILENAME)
+    plot_plasmids(genome, decompressed_genome, PLASMID_PLOT_FILENAME)
+
+    # Translate decompressed genome
+    protein_sequences = translate(decompressed_genome)
+
+    # Save protein sequences
+    store_protein_sequences(protein_sequences, OUT_PROTEIN_FILENAME)
 
 
 if __name__ == "__main__":

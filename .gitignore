@@ -1,4 +1,5 @@
 .venv
-plot.png
+*.png
+proteins.json
 phiX_decompressed.fasta
 phiX_decompressed.gff
