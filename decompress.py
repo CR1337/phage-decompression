@@ -197,19 +197,18 @@ def plot_plasmids(genome: AnnotatedSequence, decompressed_genome: AnnotatedSeque
     Plot the plasmid maps of compressed and decompressed genomes.
     """
     def feature_formatter(feature: Feature):
-        match feature.key:
-            case "CDS":
-                return True, "orange", 'black', feature.qual.get('function')
-            case "RBS":
-                return False, "blue", 'black', None
-            case "start_codon":
-                return False, "green", 'black', None
-            case "stop_codon":
-                return False, "red", 'black', None
-            case "gap":
-                return False, "gray", 'black', None
-            case _:
-                raise ValueError("Invalid Feature")
+        if feature.key == "CDS":
+            return True, "orange", 'black', feature.qual.get('function')
+        elif feature.key == "RBS":
+            return False, "blue", 'black', None
+        elif feature.key == "start_codon":
+            return False, "green", 'black', None
+        elif feature.key == "stop_codon":
+            return False, "red", 'black', None
+        elif feature.key == "gap":
+            return False, "gray", 'black', None
+        else:
+            raise ValueError("Invalid Feature")
 
     fig, axs = plt.subplots(1, 2, subplot_kw={'projection': 'polar'}, figsize=(16, 8))
     
