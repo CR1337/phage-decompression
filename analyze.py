@@ -13,6 +13,7 @@ from biotite.sequence import NucleotideSequence
 
 
 PROCESSED_NAMES_FILENAME: str = "processed_names.txt"
+DESCRIPTION_FILENAME: str = "analysis.txt"
 GENOME_DIRECTORY: str = "GenomesDB"
 
 
@@ -43,15 +44,16 @@ def analyze(name: str) -> GenomeAnalysis:
     return GenomeAnalysis(len(genome), len(decompressed_genome))
 
 
-def describe(data: List[Number], title: str):
-    print(title)
-    print("-" * len(title))
-    print(f"Mean: {statistics.mean(data)}")
-    print(f"Median: {statistics.median(data)}")
-    print(f"StdDev: {statistics.stdev(data)}")
-    print(f"Min: {min(data)}")
-    print(f"Max: {max(data)}")
-    print()
+def describe(data: List[Number], title: str) -> str:
+    string = ""
+    string += title + "\n"
+    string += "-" * len(title) + "\n"
+    string += f"Mean: {statistics.mean(data)}" + "\n"
+    string += f"Median: {statistics.median(data)}" + "\n"
+    string += f"StdDev: {statistics.stdev(data)}" + "\n"
+    string += f"Min: {min(data)}" + "\n"
+    string += f"Max: {max(data)}" + "\n"
+    string += "" + "\n"
 
 
 def plot(data: List[Number], title: str, ax):
@@ -76,6 +78,7 @@ def main():
     compression_ratios = [a.compression_ratio for a in analyses]
     differences = [a.difference for a in analyses]
 
+    description = ""
     fig, axs = plt.subplots(2, 2, figsize=(12, 12))
     axs_flat = axs.ravel()
     for data, title, ax in zip(
@@ -83,12 +86,16 @@ def main():
         ["Original lenghts", "Decompressed lengths", "Compression ratios", "Differences"],
         axs_flat
     ):
-        describe(data, title)
+        description += describe(data, title)
         plot(data, title, ax)
 
     fig.tight_layout()
     filename = os.path.join("plots", "analysis.png")
     fig.savefig(filename)
+
+    print(description)
+    with open(DESCRIPTION_FILENAME, 'w') as file:
+        file.write(description)
 
 
 if __name__ == "__main__":
