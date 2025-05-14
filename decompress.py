@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from itertools import zip_longest
 from pathlib import Path
-from typing import Generator, List, Tuple
+from typing import Generator, List, Tuple, Union
 from multiprocessing import Pool, cpu_count
 
 import matplotlib.pyplot as plt
@@ -129,13 +129,13 @@ def de_overlap(genome: AnnotatedSequence) -> AnnotatedSequence:
 
 def detect_feature(
     genome: AnnotatedSequence, 
-    sequences: str | List[str], 
+    sequences: Union[str, List[str]], 
     key: str, 
     *, 
     start: int = 0,
     end: int = -1, 
-    first_k: int | None = None, 
-    frame: int | None = None
+    first_k: Union[int, None] = None, 
+    frame: Union[int, None] = None
 ) -> Annotation:
     """
     Detect specific motifs (e.g., codons, RBS) in the genome and return as features.
