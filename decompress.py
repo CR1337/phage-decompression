@@ -1,10 +1,14 @@
+import os
 import json
 from dataclasses import dataclass
 from itertools import zip_longest
+from pathlib import Path
 from typing import Generator, List, Tuple
+from multiprocessing import Pool, cpu_count
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from tqdm import tqdm
 
 from biotite.sequence import (
     NucleotideSequence, Feature, Location, Annotation,
@@ -13,17 +17,15 @@ from biotite.sequence import (
 from biotite.sequence.io import fasta, gff
 import biotite.sequence.graphics as graphics
 
+import warnings
 
-# Input/output file paths
-IN_FASTA_FILENAME: str = "phiX.fasta"
-IN_GFF_FILENAME: str = "phiX.gff"
+# Ignore specific UserWarning about FASTA data in GFF files from Biotite
+warnings.filterwarnings("ignore", message="Biotite does not support FASTA data mixed into GFF files")
 
-OUT_FASTA_FILENAME: str = "phiX_decompressed.fasta"
-OUT_GFF_FILENAME: str = "phiX_decompressed.gff"
 
-OUT_PROTEIN_FILENAME: str = "proteins.json"
 
-PLASMID_PLOT_FILENAME: str = "plasmids.png"
+PROCESSED_NAMES_FILENAME: str = "processed_names.txt"
+GENOME_DIRECTORY: str = "GenomesDB"
 
 
 # Holds parameters for FASTA output
@@ -274,7 +276,9 @@ def store_protein_sequences(protein_sequences: List[List[Tuple[ProteinSequence, 
         json.dump(sequences, file, indent=4)
 
 
-def main():
+def process_genome(
+    name: str, 
+    plot_plasmids: bool = False, translate: bool = False, do_functional_annotation: bool = False) -> bool:
     """
     Full pipeline:
     1. Load compressed genome
@@ -285,32 +289,72 @@ def main():
     6. Translate into protein sequences
     7. Save protein sequences
     """
-    genome, fasta_parameters, gff_parameters = load_genome(IN_FASTA_FILENAME, IN_GFF_FILENAME)
+
+    in_fasta_filename = os.path.join(GENOME_DIRECTORY, f"{name}.fasta")
+    in_gff_filename = os.path.join(GENOME_DIRECTORY, name, f"{name}.gff")
+    out_fasta_filename = os.path.join(GENOME_DIRECTORY, name, f"{name}_decompressed.fasta")
+    out_gff_filename = os.path.join(GENOME_DIRECTORY, name, f"{name}_decompressed.gff")
+
+    plasmid_plot_filename = os.path.join(GENOME_DIRECTORY, name, f"{name}_decompressed_plasmids.png")
+    out_protein_filename = os.path.join(GENOME_DIRECTORY, name, f"{name}_decompressed_proteins.json")
+
+    if not os.path.exists(in_gff_filename):
+        return False
+
+    genome, fasta_parameters, gff_parameters = load_genome(in_fasta_filename, in_gff_filename)
     decompressed_genome = de_overlap(genome)
     
-    # Detect additional functional features
-    functional_annotation = detect_start_codons(genome) + detect_stop_codons(genome) + detect_rbs(genome)
-    decompressed_functional_features = detect_start_codons(decompressed_genome) + detect_stop_codons(decompressed_genome) + detect_rbs(decompressed_genome)
+    if do_functional_annotation:
+        # Detect additional functional features
+        functional_annotation = detect_start_codons(genome) + detect_stop_codons(genome) + detect_rbs(genome)
+        decompressed_functional_features = detect_start_codons(decompressed_genome) + detect_stop_codons(decompressed_genome) + detect_rbs(decompressed_genome)
+        annotations = genome.annotation + functional_annotation
+        decompressed_annotations = decompressed_genome.annotation + decompressed_functional_features
+    else:
+        annotations = genome.annotation
+        decompressed_annotations = decompressed_genome.annotation
     
     # Combine annotations
-    genome = AnnotatedSequence(genome.annotation + functional_annotation, genome.sequence)
-    decompressed_genome = AnnotatedSequence(decompressed_genome.annotation + decompressed_functional_features, decompressed_genome.sequence)
+    genome = AnnotatedSequence(annotations, genome.sequence)
+    decompressed_genome = AnnotatedSequence(decompressed_annotations, decompressed_genome.sequence)
 
     # Save decompressed genome and annotation
     new_fasta_parameters = FastaParameters(
         f"{fasta_parameters.header} (decompressed)",
         fasta_parameters.chars_per_line
     )
-    store_genome(decompressed_genome, new_fasta_parameters, gff_parameters, OUT_FASTA_FILENAME, OUT_GFF_FILENAME)
+    store_genome(decompressed_genome, new_fasta_parameters, gff_parameters, out_fasta_filename, out_gff_filename)
 
-    # Generate comparative plot
-    plot_plasmids(genome, decompressed_genome, PLASMID_PLOT_FILENAME)
+    if plot_plasmids:
+        # Generate comparative plot
+        plot_plasmids(genome, decompressed_genome, plasmid_plot_filename)
 
-    # Translate decompressed genome
-    protein_sequences = translate(decompressed_genome)
+    if translate:
+        # Translate decompressed genome
+        protein_sequences = translate(decompressed_genome)
 
-    # Save protein sequences
-    store_protein_sequences(protein_sequences, OUT_PROTEIN_FILENAME)
+        # Save protein sequences
+        store_protein_sequences(protein_sequences, out_protein_filename)
+
+    return True
+
+
+def main():
+    directory = Path(GENOME_DIRECTORY)
+    names = [
+        ".".join(f.name.split(".")[:-1]) 
+        for f in directory.rglob('*.fasta')
+    ]
+
+    with Pool(processes=cpu_count() - 1) as pool:
+        results = list(tqdm(pool.imap(process_genome, names), total=len(names), desc="Processing genomes"))
+
+    with open(PROCESSED_NAMES_FILENAME, 'w') as file:
+        for name, result in zip(names, results):
+            if result:
+                file.write(f"{name}\n")
+
+    print("DONE")
 
 
 if __name__ == "__main__":

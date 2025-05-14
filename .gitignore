@@ -3,3 +3,5 @@
 proteins.json
 phiX_decompressed.fasta
 phiX_decompressed.gff
+GenomesDB
+processed_names.txt
