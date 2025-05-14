@@ -54,6 +54,7 @@ def describe(data: List[Number], title: str) -> str:
     string += f"Min: {min(data)}" + "\n"
     string += f"Max: {max(data)}" + "\n"
     string += "" + "\n"
+    return string
 
 
 def plot(data: List[Number], title: str, ax):
