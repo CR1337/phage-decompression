@@ -6,8 +6,6 @@ from pathlib import Path
 from typing import Generator, List, Tuple, Union
 from multiprocessing import Pool, cpu_count
 
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 from tqdm import tqdm
 
 from biotite.sequence import (
@@ -15,7 +13,7 @@ from biotite.sequence import (
     AnnotatedSequence, find_subsequence, ProteinSequence
 )
 from biotite.sequence.io import fasta, gff
-import biotite.sequence.graphics as graphics
+from plot import plot_plasmids
 
 import warnings
 
@@ -190,53 +188,6 @@ def store_genome(genome: AnnotatedSequence, fasta_parameters: FastaParameters, g
     gff_file = gff.GFFFile()
     gff.set_annotation(gff_file, genome.annotation, gff_parameters.sequence_id, gff_parameters.source)
     gff_file.write(annotation_filename)
-
-
-def plot_plasmids(genome: AnnotatedSequence, decompressed_genome: AnnotatedSequence, filename: str):
-    """
-    Plot the plasmid maps of compressed and decompressed genomes.
-    """
-    def feature_formatter(feature: Feature):
-        if feature.key == "CDS":
-            return True, "orange", 'black', feature.qual.get('function')
-        elif feature.key == "RBS":
-            return False, "blue", 'black', None
-        elif feature.key == "start_codon":
-            return False, "green", 'black', None
-        elif feature.key == "stop_codon":
-            return False, "red", 'black', None
-        elif feature.key == "gap":
-            return False, "gray", 'black', None
-        else:
-            raise ValueError("Invalid Feature")
-
-    fig, axs = plt.subplots(1, 2, subplot_kw={'projection': 'polar'}, figsize=(16, 8))
-    
-    graphics.plot_plasmid_map(
-        axs[0], 
-        genome.annotation, 
-        len(genome.sequence), 
-        label="compressed",
-        feature_formatter=feature_formatter
-    )
-
-    graphics.plot_plasmid_map(
-        axs[1], 
-        decompressed_genome.annotation, 
-        len(decompressed_genome.sequence), 
-        label="decompressed",
-        feature_formatter=feature_formatter
-    )
-
-    legend_elements = [
-        Patch(facecolor='orange', edgecolor='black', label='CDS'),
-        Patch(facecolor='blue', edgecolor='black', label='RBS'),
-        Patch(facecolor='green', edgecolor='black', label='Start Codon'),
-        Patch(facecolor='red', edgecolor='black', label='Stop Codon'),
-        Patch(facecolor='gray', edgecolor='black', label='Gap'),
-    ]
-    fig.legend(handles=legend_elements, loc='lower center', title='Feature Types')
-    fig.savefig(filename)
 
 
 def translate(genome: AnnotatedSequence) -> List[List[Tuple[ProteinSequence, int, int]]]:
