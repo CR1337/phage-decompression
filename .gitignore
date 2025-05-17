@@ -6,3 +6,5 @@ phiX_decompressed.gff
 GenomesDB
 processed_names.txt
 plots/*.png
+analysis.csv
+analysis.txt

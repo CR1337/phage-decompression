@@ -1,11 +1,13 @@
 import os
 import json
 import statistics
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from dataclasses import dataclass
 from typing import List
 from numbers import Number
+from multiprocessing import Pool, cpu_count
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -31,6 +33,10 @@ class GenomeAnalysis:
         return self.decompressed_length / self.original_length
     
     @property
+    def compression_factor(self) -> float:
+        return self.original_length / self.decompressed_length
+    
+    @property
     def difference(self) -> int:
         return self.decompressed_length - self.original_length
     
@@ -40,6 +46,7 @@ class GenomeAnalysis:
             'original_length': self.original_length,
             'decompressed_length': self.decompressed_length,
             'compression_ratio': self.compression_ratio,
+            'compression_factor': self.compression_factor,
             'difference': self.difference
         }
         with open(filename, 'w') as file:
@@ -89,23 +96,22 @@ def main():
         names = (n.strip() for n in file.readlines())
         names = [n for n in names if len(n) > 0]
 
-    analyses = [
-        analyze(name) for name 
-        in tqdm(names, total=len(names), desc="Analyzing genomes")
-    ]
+    with Pool(processes=cpu_count()) as pool:
+        analyses = list(tqdm(pool.imap(analyze, names), total=len(names), desc="Analyzing genomes"))
 
     names = [a.name for a in analyses]
     original_lengths = [a.original_length for a in analyses]
     decompressed_lengths = [a.decompressed_length for a in analyses]
     compression_ratios = [a.compression_ratio for a in analyses]
+    compression_factors = [a.compression_factor for a in analyses]
     differences = [a.difference for a in analyses]
 
     description = ""
     fig, axs = plt.subplots(2, 2, figsize=(12, 12))
     axs_flat = axs.ravel()
     for data, title, ax in zip(
-        [original_lengths, decompressed_lengths, compression_ratios, differences],
-        ["Original lenghts", "Decompressed lengths", "Compression ratios", "Differences"],
+        [original_lengths, decompressed_lengths, compression_factors, differences],
+        ["Original lenghts", "Decompressed lengths", "Compression factors", "Differences"],
         axs_flat
     ):
         description += describe(data, title)
@@ -119,11 +125,25 @@ def main():
     with open(DESCRIPTION_FILENAME, 'w') as file:
         file.write(description)
 
+    fig, axs = plt.subplots(2, 2, figsize=(12, 12))
+    axs_flat = axs.ravel()
+    for data, title, ax in zip(
+        [original_lengths, decompressed_lengths, compression_factors, differences],
+        ["Original lenghts", "Decompressed lengths", "Compression factors", "Differences"],
+        axs_flat
+    ):
+        plot(np.log10(data), f"log {title}", ax)
+
+    fig.tight_layout()
+    filename = os.path.join("plots", "log_analysis.png")
+    fig.savefig(filename)
+
     df = pd.DataFrame({
         'name': names,
         'original_length': original_lengths,
         'decompressed_length': decompressed_lengths,
         'compression_ratio': compression_ratios,
+        'compression_factor': compression_factors,
         'difference': differences
     })
     df.to_csv(ANALYSIS_DATA_FILENAME, index=False)
