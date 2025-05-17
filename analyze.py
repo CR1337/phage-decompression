@@ -7,7 +7,6 @@ from tqdm import tqdm
 from dataclasses import dataclass
 from typing import List
 from numbers import Number
-from multiprocessing import Pool, cpu_count
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -96,8 +95,10 @@ def main():
         names = (n.strip() for n in file.readlines())
         names = [n for n in names if len(n) > 0]
 
-    with Pool(processes=cpu_count()) as pool:
-        analyses = list(tqdm(pool.imap(analyze, names), total=len(names), desc="Analyzing genomes"))
+    analyses = [
+        analyze(name) for name 
+        in tqdm(names, total=len(names), desc="Analyzing genomes")
+    ]
 
     names = [a.name for a in analyses]
     original_lengths = [a.original_length for a in analyses]
