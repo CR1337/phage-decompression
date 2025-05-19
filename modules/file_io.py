@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from biotite.sequence import AnnotatedSequence, NucleotideSequence
-from biotite.sequence.io import fasta, gff
+from biotite.sequence.io import fasta, gff, genbank
 
 
 # Holds parameters for FASTA output
@@ -61,10 +61,14 @@ class SequenceFile:
         return os.path.join(self.directory, self.name, filename)
 
 
-def load_annotated_sequence(fasta_filename: str, gff_filename: str) -> Tuple[AnnotatedSequence, FastaParameters, GFFParameters]:
+def load_annotated_sequence(genbank_filename: str) -> Tuple[AnnotatedSequence, FastaParameters, GFFParameters]:
     """
     Load a genome sequence and its annotation from FASTA and GFF files.
     """
+    genbank_file = genbank.GenBankFile.read(genbank_filename)
+    return genbank.get_annotated_sequence(genbank_file), FastaParameters(genbank.get_definition(genbank_file), 80), GFFParameters("NO_LOCUS", genbank.get_source(genbank_file))
+
+
     fasta_file = fasta.FastaFile.read(fasta_filename)
     genome = fasta.get_sequence(fasta_file, seq_type=NucleotideSequence)
 

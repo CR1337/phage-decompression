@@ -8,18 +8,25 @@ ALLOWED_OPERATIONS: List[str] = ['decompress', 'plot', 'analyze']
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Tool for decompressing, plotting and analyzing phage genomes.")
 
+    # parser.add_argument(
+    #     '-f', '--input-fasta-file',
+    #     type=str,
+    #     required=True,
+    #     help=""
+    # )
+
+    # parser.add_argument(
+    #     '-g', '--input-gff-file',
+    #     type=str,
+    #     required=True,
+    #     help=""    
+    # )
+
     parser.add_argument(
-        '-f', '--input-fasta-file',
+        '-i', '--input-filename',
         type=str,
         required=True,
         help=""
-    )
-
-    parser.add_argument(
-        '-g', '--input-gff-file',
-        type=str,
-        required=True,
-        help=""    
     )
 
     parser.add_argument(
