@@ -27,12 +27,13 @@ def get_sequence_files(names: str, input_directory: str) -> List[SequenceFile]:
     ]
 
 
-def decompress(names: str, input_directory: str):
-    for file in get_sequence_files(names, input_directory):
-        genome, fasta_parameters, gff_parameters = load_annotated_sequence(file)
-        decompressed_genome = decompress_genome(genome)
-        store_decompressed_sequence(decompressed_genome, file, fasta_parameters, gff_parameters)
-        print(file.name)
+def decompress(fasta_filename: str, gff_filename: str, output_directory: str):
+    out_fasta_filename = os.path.join(output_directory, f"decompressed_{fasta_filename}")
+    out_gff_filename = os.path.join(output_directory, f"decompressed_{gff_filename}")
+    
+    genome, fasta_parameters, gff_parameters = load_annotated_sequence(fasta_filename, gff_filename)
+    decompressed_genome = decompress_genome(genome)
+    store_decompressed_sequence(decompressed_genome, out_fasta_filename, out_gff_filename, fasta_parameters, gff_parameters)
 
 
 def plot(names: str, input_directory: str):
@@ -93,7 +94,7 @@ def main():
     arguments = parse_arguments()
 
     if 'decompress' in arguments.operations:
-        decompress(arguments.names, arguments.input_directory)
+        decompress(arguments.input_fasta_file, arguments.input_gff_file, arguments.output_directory)
 
     if 'plot' in arguments.operations:
         plot(arguments.names, arguments.input_directory)

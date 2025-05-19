@@ -9,16 +9,17 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Tool for decompressing, plotting and analyzing phage genomes.")
 
     parser.add_argument(
-        '-n', '--names',
+        '-f', '--input-fasta-file',
         type=str,
         required=True,
-        help="Genome names for decompression and plotting (supports regex)"
+        help=""
     )
 
     parser.add_argument(
-        'input_directory',
+        '-g', '--input-gff-file',
         type=str,
-        help="Directory that contains the genomes"
+        required=True,
+        help=""    
     )
 
     parser.add_argument(

@@ -61,11 +61,11 @@ class SequenceFile:
         return os.path.join(self.directory, self.name, filename)
 
 
-def load_annotated_sequence(file: SequenceFile, decompressed: bool = False) -> Tuple[AnnotatedSequence, FastaParameters, GFFParameters]:
+def load_annotated_sequence(fasta_filename: str, gff_filename: str) -> Tuple[AnnotatedSequence, FastaParameters, GFFParameters]:
     """
     Load a genome sequence and its annotation from FASTA and GFF files.
     """
-    fasta_file = fasta.FastaFile.read(file.decompressed_fasta_filename if decompressed else file.fasta_filename)
+    fasta_file = fasta.FastaFile.read(fasta_filename)
     genome = fasta.get_sequence(fasta_file, seq_type=NucleotideSequence)
 
     # Extract FASTA parameters
@@ -74,7 +74,7 @@ def load_annotated_sequence(file: SequenceFile, decompressed: bool = False) -> T
         len(fasta_file.lines[1])
     )
 
-    gff_file = gff.GFFFile.read(file.decompressed_gff_filename if decompressed else file.gff_filename)
+    gff_file = gff.GFFFile.read(gff_filename)
     annotation = gff.get_annotation(gff_file)
 
     # Parse GFF metadata from first non-comment line
@@ -91,11 +91,11 @@ def load_sequence(file: SequenceFile, decompressed: bool = False) -> NucleotideS
     return genome
 
 
-def store_decompressed_sequence(genome: AnnotatedSequence, file: SequenceFile, fasta_parameters: FastaParameters, gff_parameters: GFFParameters):
+def store_decompressed_sequence(genome: AnnotatedSequence, fasta_filename: str, gff_filename: str, fasta_parameters: FastaParameters, gff_parameters: GFFParameters):
     fasta_file = fasta.FastaFile(fasta_parameters.chars_per_line)
     fasta.set_sequence(fasta_file, genome.sequence, fasta_parameters.header)
-    fasta_file.write(file.decompressed_fasta_filename)
+    fasta_file.write(fasta_filename)
 
     gff_file = gff.GFFFile()
     gff.set_annotation(gff_file, genome.annotation, gff_parameters.sequence_id, gff_parameters.source)
-    gff_file.write(file.decompressed_gff_filename)
+    gff_file.write(gff_filename)
