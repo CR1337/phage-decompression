@@ -28,8 +28,9 @@ def get_sequence_files(names: str, input_directory: str) -> List[SequenceFile]:
 
 
 def decompress(fasta_filename: str, gff_filename: str, output_directory: str):
-    out_fasta_filename = os.path.join(output_directory, f"decompressed_{fasta_filename}")
-    out_gff_filename = os.path.join(output_directory, f"decompressed_{gff_filename}")
+    name = os.path.basename(fasta_filename).split(".")[0]
+    out_fasta_filename = os.path.join(output_directory, f"{name}_decompressed.fasta")
+    out_gff_filename = os.path.join(output_directory, f"{name}_decompressed.gff")
     
     genome, fasta_parameters, gff_parameters = load_annotated_sequence(fasta_filename, gff_filename)
     decompressed_genome = decompress_genome(genome)
