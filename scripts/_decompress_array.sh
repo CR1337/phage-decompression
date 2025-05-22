@@ -2,7 +2,7 @@
 #SBATCH --job-name=decompress_genomes
 #SBATCH --output=logs/decompress_%A_%a.out
 #SBATCH --error=logs/decompress_%A_%a.err
-# #SBATCH --array=0-0  # overridden by caller
+#SBATCH --array=0-30000
 #SBATCH --time=00:05:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=512M
