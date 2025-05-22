@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/bin/bash -ux
 #SBATCH --job-name=glm2_strings
 #SBATCH --output=logs/glm2_strings_%A_%a.out
 #SBATCH --error=logs/glm2_strings_%A_%a.err
 #SBATCH --array=0-30000
+#SBATCH --ntasks=1
 #SBATCH --time=00:10:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=512M
