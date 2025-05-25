@@ -2,6 +2,7 @@
 #SBATCH --job-name=decompress_genomes
 #SBATCH --output=logs/decompress_%A_%a.out
 #SBATCH --error=logs/decompress_%A_%a.err
+#SBATCH --account=sci-renard-student
 #SBATCH --array=0-9999
 #SBATCH --ntasks=1
 #SBATCH --time=00:20:00
