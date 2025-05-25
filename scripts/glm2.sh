@@ -16,5 +16,5 @@ for (( i=0; i<$BATCHES; i++ )); do
     if [ $ARRAY_END -gt 9999 ]; then
         ARRAY_END=9999
     fi
-    sbatch --array=0-${ARRAY_END} scripts/_decompress_array.sh "$DIR" "$ENV_DIR" "$OFFSET"
+    sbatch --array=0-${ARRAY_END} scripts/_glm2_array.sh "$DIR" "$ENV_DIR" "$OFFSET"
 done

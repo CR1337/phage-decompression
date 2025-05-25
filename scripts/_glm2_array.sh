@@ -30,4 +30,5 @@ GFF_FILE="${NAME}.gff"
 mkdir -p "${DIR}/${NAME}"
 
 # Run the Python script
-python3 phagetools.py decompress -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -l processed_files.txt -o "${DIR}/${NAME}"
+python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -o "${DIR}/${NAME}_original.seq"
+python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -r -o "${DIR}/${NAME}_decompressed.seq"
