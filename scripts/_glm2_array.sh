@@ -30,5 +30,5 @@ GFF_FILE="${NAME}.gff"
 mkdir -p "${DIR}/${NAME}"
 
 # Run the Python script
-python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -o "${DIR}/${NAME}/${NAME}_original.seq"
-python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -r -o "${DIR}/${NAME}/${NAME}_decompressed.seq"
+python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -o "${DIR}/${NAME}/${NAME}_decompressed.seq"
+python3 phagetools.py glm2 -i "${DIR}/${NAME}.fasta" -g "${DIR}/${NAME}/${GFF_FILE}" -r -o "${DIR}/${NAME}/${NAME}_original.seq"
