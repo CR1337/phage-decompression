@@ -15,5 +15,6 @@ for (( i=0; i<$BATCHES; i++ )); do
     if [ $ARRAY_END -gt 9999 ]; then
         ARRAY_END=9999
     fi
+    echo "$i - $TOTAL - $BATCHES - $OFFSET - $ARRAY_END - $DIR"
     sbatch --array=0-${ARRAY_END} scripts/_decompress_array.sh "$DIR" "$OFFSET"
 done
