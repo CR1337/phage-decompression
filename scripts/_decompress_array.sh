@@ -1,6 +1,8 @@
 #!/bin/bash -ux
 #SBATCH --job-name=decompress_genomes
 #SBATCH --account=sci-renard-student
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
 #SBATCH --array=0-9999
 #SBATCH --ntasks=1
 #SBATCH --time=00:40:00
