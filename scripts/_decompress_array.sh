@@ -1,7 +1,5 @@
 #!/bin/bash -ux
 #SBATCH --job-name=decompress_genomes
-#SBATCH --output=logs/decompress_%A_%a.out
-#SBATCH --error=logs/decompress_%A_%a.err
 #SBATCH --account=sci-renard-student
 #SBATCH --array=0-9999
 #SBATCH --ntasks=1
@@ -25,6 +23,9 @@ FASTA_FILE="${FILES[$INDEX]}"
 # Derive NAME and GFF_FILE from FASTA file
 NAME=$(basename "$FASTA_FILE" .fasta)
 GFF_FILE="${NAME}.gff"
+
+mkdir -p logs
+exec > "logs/decompress_${NAME}.out" 2> "logs/decompress_${NAME}.err"
 
 # Create output directory if needed
 mkdir -p "${DIR}/${NAME}"
