@@ -12,11 +12,10 @@
 #SBATCH --nice=5000 
 
 DIR="$1"
-ENV_DIR="$2"
-OFFSET="$3"
+OFFSET="$2"
 
 # Activate the virtual environment
-source "${ENV_DIR}/bin/activate"
+eval "$(~/miniforge3/bin/conda shell.bash hook)"
 
 # Get all fasta files and select the one for this task
 FILES=($(ls "${DIR}"/*.fasta))

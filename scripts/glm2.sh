@@ -1,7 +1,6 @@
 #!/bin/bash
 
 DIR="$1"
-ENV_DIR="$2"
 ARRAY_SIZE=10000
 
 # Count total fasta files
@@ -16,5 +15,5 @@ for (( i=0; i<$BATCHES; i++ )); do
     if [ $ARRAY_END -gt 9999 ]; then
         ARRAY_END=9999
     fi
-    sbatch --array=0-${ARRAY_END} scripts/_glm2_array.sh "$DIR" "$ENV_DIR" "$OFFSET"
+    sbatch --array=0-${ARRAY_END} scripts/_glm2_array.sh "$DIR" "$OFFSET"
 done
