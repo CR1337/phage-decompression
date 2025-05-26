@@ -5,7 +5,7 @@
 #SBATCH --account=sci-renard-student
 #SBATCH --array=0-9999
 #SBATCH --ntasks=1
-#SBATCH --time=00:40:00
+#SBATCH --time=00:50:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2G
 #SBATCH --partition=cpu
