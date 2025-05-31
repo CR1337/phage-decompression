@@ -198,24 +198,29 @@ def parse_arguments():
 
     decompress_parser = subparsers.add_parser(
         "decompress",
+        required=True,
         help="Decompress a genome into full nucleotide sequence and save as FASTA + GFF.",
     )
     _parse_decompress_arguments(decompress_parser)
 
     summary_parser = subparsers.add_parser(
         "summary",
+        required=True,
         help="Summarize and visualize decompression results from multiple JSON files.",
     )
     _parse_summary_arguments(summary_parser)
 
     glm2_parser = subparsers.add_parser(
         "glm2",
+        required=True,
         help="Generate a glm2-compatible sequence file from an annotated genome.",
     )
     _parse_glm2_arguments(glm2_parser)
 
     similarity_parser = subparsers.add_parser(
-        "similarity", help="Compute or plot similarity between genome sequences."
+        "similarity",
+        required=True,
+        help="Compute or plot similarity between genome sequences."
     )
     _parse_similarity_arguments(similarity_parser)
 
