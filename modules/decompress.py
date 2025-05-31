@@ -8,10 +8,17 @@ from Bio.SeqFeature import SeqFeature, SimpleLocation
 from modules.model import AnnotatedSequence
 
 
-
-def sub_sequences(genome: AnnotatedSequence) -> Generator[Tuple[int, int, SeqFeature], None, None]:
+def sub_sequences(
+    genome: AnnotatedSequence,
+) -> Generator[Tuple[int, int, SeqFeature], None, None]:
     """
     Yield non-overlapping subsequences and gaps between features in order.
+
+    Parameters:
+        genome (AnnotatedSequence): The annotated genome sequence to process.
+
+    Yields:
+        Tuple[int, int, SeqFeature]: Start and end positions, and the corresponding feature or gap.
     """
     features = sorted(genome.features, key=lambda f: f.location.start)
 
@@ -22,7 +29,7 @@ def sub_sequences(genome: AnnotatedSequence) -> Generator[Tuple[int, int, SeqFea
     if feature_0_first > 1:
         prev_end = feature_0_first
         gap_location = SimpleLocation(1, feature_0_first, strand=1)
-        yield 1, feature_0_first, SeqFeature(gap_location, type='gap')
+        yield 1, feature_0_first, SeqFeature(gap_location, type="gap")
 
     for feature, next_feature in zip_longest(features, features[1:]):
         location = feature.location
@@ -38,17 +45,26 @@ def sub_sequences(genome: AnnotatedSequence) -> Generator[Tuple[int, int, SeqFea
             if next_start > end:
                 prev_end = next_start
                 gap_location = SimpleLocation(end, next_start, strand=1)
-                yield end, next_start, SeqFeature(gap_location, type='gap')
+                yield end, next_start, SeqFeature(gap_location, type="gap")
 
     # Handle terminal gap if feature ends before end of sequence
     if prev_end < len(genome.sequence) + 1:
         gap_location = SimpleLocation(prev_end, len(genome.sequence) + 1, strand=1)
-        yield prev_end, len(genome.sequence) + 1, SeqFeature(gap_location, 'gap')
+        yield prev_end, len(genome.sequence) + 1, SeqFeature(gap_location, "gap")
 
 
 def decompress(genome: AnnotatedSequence) -> AnnotatedSequence:
     """
     Decompress overlapping genome features into a new linearized sequence.
+
+    This function constructs a new genome sequence by laying out features
+    and interleaving gaps without overlaps, adjusting feature locations accordingly.
+
+    Parameters:
+        genome (AnnotatedSequence): The original annotated sequence with potentially overlapping features.
+
+    Returns:
+        AnnotatedSequence: A new sequence with non-overlapping features and adjusted coordinates.
     """
     decompressed_sequence = ""
     decompressed_features = []
@@ -61,33 +77,44 @@ def decompress(genome: AnnotatedSequence) -> AnnotatedSequence:
         new_first = len(decompressed_sequence) - length
         new_last = new_first + length - 1
         new_location = SimpleLocation(new_first, new_last, location.strand)
-        new_feature = SeqFeature(new_location, type=feature.type, qualifiers=feature.qualifiers)
+        new_feature = SeqFeature(
+            new_location, type=feature.type, qualifiers=feature.qualifiers
+        )
         decompressed_features.append(new_feature)
 
     decompressed_genome = SeqRecord(
-        Seq(decompressed_sequence), 
+        Seq(decompressed_sequence),
         id=genome.record.id,
-        name=genome.record.name, 
-        description=genome.record.description
+        name=genome.record.name,
+        description=genome.record.description,
     )
 
     return AnnotatedSequence(decompressed_genome, decompressed_features)
 
 
 def count_overlapping_cds(sequence: AnnotatedSequence) -> int:
+    """
+    Count the number of coding sequence (CDS) features that overlap.
+
+    Parameters:
+        sequence (AnnotatedSequence): The annotated sequence with genomic features.
+
+    Returns:
+        int: The number of overlapping CDS regions.
+    """
     intervals = sorted(sequence.features, key=lambda f: f.location.start)
 
     overlapping = set()
     prev_start, prev_end = intervals[0].location.start, intervals[0].location.end
-    
+
     for i in range(1, len(intervals)):
         curr_start, curr_end = intervals[i].location.start, intervals[i].location.end
-        
+
         if curr_start <= prev_end:
             overlapping.add((prev_start, prev_end))
             overlapping.add((curr_start, curr_end))
             prev_end = max(prev_end, curr_end)
         else:
             prev_start, prev_end = curr_start, curr_end
-    
+
     return len(overlapping)

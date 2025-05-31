@@ -3,7 +3,13 @@ import json
 from typing import List
 
 from modules.arguments import parse_arguments
-from modules.file_io import load_annotated_sequence_from_fasta, load_annotated_sequence_from_genbank, store_annotated_sequence_as_fasta, load_sequence_from_fasta, load_sequence_from_genbank
+from modules.file_io import (
+    load_annotated_sequence_from_fasta,
+    load_annotated_sequence_from_genbank,
+    store_annotated_sequence_as_fasta,
+    load_sequence_from_fasta,
+    load_sequence_from_genbank,
+)
 from modules.decompress import decompress as decompress_genome, count_overlapping_cds
 from modules.glm2 import create_glm2_string_from_dna, create_glm2_string_from_features
 from modules.similarity import compute_similarity, plot_similarities
@@ -14,86 +20,110 @@ import matplotlib.pyplot as plt
 
 
 def decompress(
-    input_format: str, 
+    input_format: str,
     input_filename: str,
     input_gff_filename: str | None,
     file_list_filename: str | None,
-    output_directory: str
+    output_directory: str,
 ):
+    """
+    Decompress a genome sequence by flattening overlapping features and exporting the result.
+
+    Parameters:
+        input_format (str): Format of the input sequence ('fasta' or 'genbank').
+        input_filename (str): Path to the input FASTA or GenBank file.
+        input_gff_filename (str | None): Path to the GFF file (only for FASTA).
+        file_list_filename (str | None): Optional file to append output metadata filenames to.
+        output_directory (str): Directory where output files will be saved.
+    """
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    if input_format == 'fasta':
-        sequence = load_annotated_sequence_from_fasta(input_filename, input_gff_filename)
-    elif input_format == 'genbank':
+    if input_format == "fasta":
+        sequence = load_annotated_sequence_from_fasta(
+            input_filename, input_gff_filename
+        )
+    elif input_format == "genbank":
         sequence = load_annotated_sequence_from_genbank(input_filename)
 
     decompressed_sequence = decompress_genome(sequence)
     name = os.path.basename(input_filename).split(".")[0]
-    
+
     fasta_filename = os.path.join(output_directory, f"{name}_decompressed.fasta")
     gff_filename = os.path.join(output_directory, f"{name}_decompressed.gff")
-    store_annotated_sequence_as_fasta(decompressed_sequence, fasta_filename, gff_filename)
-
+    store_annotated_sequence_as_fasta(
+        decompressed_sequence, fasta_filename, gff_filename
+    )
 
     compressed_length = len(sequence)
     decompressed_length = len(decompressed_sequence)
     compression_ratio = decompressed_length / compressed_length
     difference = decompressed_length - compressed_length
-    n_genes = sum((1 if f.type == 'CDS' else 0) for f in sequence.features)
+    n_genes = sum((1 if f.type == "CDS" else 0) for f in sequence.features)
     n_overlapping_genes = count_overlapping_cds(sequence)
 
     json_data = {
-        'compressed_length': compressed_length,
-        'decompressed_length': decompressed_length,
-        'compression_ratio': compression_ratio,
-        'difference': difference,
-        'n_genes': n_genes,
-        'n_overlapping_genes': n_overlapping_genes
+        "compressed_length": compressed_length,
+        "decompressed_length": decompressed_length,
+        "compression_ratio": compression_ratio,
+        "difference": difference,
+        "n_genes": n_genes,
+        "n_overlapping_genes": n_overlapping_genes,
     }
 
     json_filename = os.path.join(output_directory, f"{name}_decompression.json")
 
-    with open(json_filename, 'w') as file:
+    with open(json_filename, "w") as file:
         json.dump(json_data, file)
 
     if file_list_filename:
-        with open(file_list_filename, 'a') as file:
+        with open(file_list_filename, "a") as file:
             file.write(f"{json_filename}\n")
 
 
-def summary(file_list_filename: str, output_directory: str) :
+def summary(file_list_filename: str, output_directory: str):
+    """
+    Generate summary statistics and histograms for a list of decompression result files.
+
+    Parameters:
+        file_list_filename (str): File containing paths to JSON metadata files.
+        output_directory (str): Directory to write summary statistics and plots to.
+    """
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-        
-    with open(file_list_filename, 'r') as file:
+
+    with open(file_list_filename, "r") as file:
         file_list = [line.strip() for line in file.readlines()]
     clean_file_list = [line for line in file_list if line]
 
     columns = [
-        'compressed_length', 'decompressed_length', 'compression_ratio', 
-        'difference', 'n_genes', 'n_overlapping_genes'
+        "compressed_length",
+        "decompressed_length",
+        "compression_ratio",
+        "difference",
+        "n_genes",
+        "n_overlapping_genes",
     ]
 
     data_df = pd.DataFrame(columns=columns)
     for filename in clean_file_list:
-        with open(filename, 'r') as file:
+        with open(filename, "r") as file:
             data = json.load(file)
         data_df.loc[len(data_df)] = data
 
     summary_funcs = {
-        'count': data_df.count(numeric_only=True),
-        'mean': data_df.mean(numeric_only=True),
-        'median': data_df.median(numeric_only=True),
-        'stddev': data_df.std(numeric_only=True),
-        'min': data_df.min(numeric_only=True),
-        'max': data_df.max(numeric_only=True),
-        '25 percentile': data_df.quantile(0.25, numeric_only=True),
-        '75 percentile': data_df.quantile(0.75, numeric_only=True)
+        "count": data_df.count(numeric_only=True),
+        "mean": data_df.mean(numeric_only=True),
+        "median": data_df.median(numeric_only=True),
+        "stddev": data_df.std(numeric_only=True),
+        "min": data_df.min(numeric_only=True),
+        "max": data_df.max(numeric_only=True),
+        "25 percentile": data_df.quantile(0.25, numeric_only=True),
+        "75 percentile": data_df.quantile(0.75, numeric_only=True),
     }
 
     summary_df = pd.DataFrame(summary_funcs).T
-    summary_df = summary_df.reset_index().rename(columns={'index': 'stat'})
+    summary_df = summary_df.reset_index().rename(columns={"index": "stat"})
 
     data_filename = os.path.join(output_directory, "data.csv")
     summary_filename = os.path.join(output_directory, "summary.csv")
@@ -122,15 +152,27 @@ def summary(file_list_filename: str, output_directory: str) :
 
 
 def glm2(
-    input_format: str, 
-    input_filename: str, 
-    input_gff_filename: str | None, 
-    raw: bool, 
-    output_filename: str
+    input_format: str,
+    input_filename: str,
+    input_gff_filename: str | None,
+    raw: bool,
+    output_filename: str,
 ):
-    if input_format == 'fasta':
-        sequence = load_annotated_sequence_from_fasta(input_filename, input_gff_filename)
-    elif input_format == 'genbank':
+    """
+    Generate a GLM2-formatted string from a genomic sequence.
+
+    Parameters:
+        input_format (str): Either 'fasta' or 'genbank'.
+        input_filename (str): Input file path for sequence.
+        input_gff_filename (str | None): GFF file path for FASTA inputs.
+        raw (bool): Whether to use raw DNA (True) or decompressed features (False).
+        output_filename (str): File to write the GLM2 string to.
+    """
+    if input_format == "fasta":
+        sequence = load_annotated_sequence_from_fasta(
+            input_filename, input_gff_filename
+        )
+    elif input_format == "genbank":
         sequence = load_annotated_sequence_from_genbank(input_filename)
 
     if raw:
@@ -138,17 +180,28 @@ def glm2(
     else:
         result = create_glm2_string_from_features(sequence)
 
-    with open(output_filename, 'w') as file:
+    with open(output_filename, "w") as file:
         file.write(result)
 
 
-def similarity(input_filenames: List[str], plot: bool, cluster: bool, output_filename: str):
+def similarity(
+    input_filenames: List[str], plot: bool, cluster: bool, output_filename: str
+):
+    """
+    Calculate pairwise similarity or generate a heatmap/cluster map from a CSV file.
+
+    Parameters:
+        input_filenames (List[str]): Two sequence file paths or a single CSV file.
+        plot (bool): If True, plot a heatmap/cluster map from CSV.
+        cluster (bool): If plotting, whether to use clustering in the heatmap.
+        output_filename (str): Output file for similarity result or plot image.
+    """
     if plot:
         df = pd.read_csv(
-            input_filenames[0], 
-            header=0, 
-            names=["filename_1", "filename_2", "similarity"], 
-            index_col=False
+            input_filenames[0],
+            header=0,
+            names=["filename_1", "filename_2", "similarity"],
+            index_col=False,
         )
         plot_similarities(df, output_filename, cluster)
 
@@ -161,55 +214,61 @@ def similarity(input_filenames: List[str], plot: bool, cluster: bool, output_fil
                 sequences.append(load_sequence_from_genbank(filename))
         similarity = compute_similarity(sequences[0].seq, sequences[1].seq)
 
-        with open(output_filename, 'a') as file:
+        with open(output_filename, "a") as file:
             file.write(f"{input_filenames[0]},{input_filenames[1]},{similarity}\n")
 
 
 def main():
+    """
+    Main dispatcher function for command-line utility.
+
+    Delegates execution based on parsed CLI arguments to:
+    - decompress
+    - summary
+    - glm2
+    - similarity
+    """
     arguments = parse_arguments()
 
-    if arguments.command == 'decompress':
+    if arguments.command == "decompress":
         decompress(
             arguments.input_format,
             arguments.input_filename,
             (
-                arguments.input_gff_filename 
-                if hasattr(arguments, 'input_gff_filename') 
+                arguments.input_gff_filename
+                if hasattr(arguments, "input_gff_filename")
                 else None
             ),
             (
-                arguments.file_list_filename 
-                if hasattr(arguments, 'file_list_filename') 
+                arguments.file_list_filename
+                if hasattr(arguments, "file_list_filename")
                 else None
             ),
-            arguments.output_directory
+            arguments.output_directory,
         )
 
-    elif arguments.command == 'summary':
-        summary(
-            arguments.file_list_filename,
-            arguments.output_directory
-        )
+    elif arguments.command == "summary":
+        summary(arguments.file_list_filename, arguments.output_directory)
 
-    elif arguments.command == 'glm2':
+    elif arguments.command == "glm2":
         glm2(
             arguments.input_format,
             arguments.input_filename,
             (
-                arguments.input_gff_filename 
-                if hasattr(arguments, 'input_gff_filename') 
+                arguments.input_gff_filename
+                if hasattr(arguments, "input_gff_filename")
                 else None
             ),
             arguments.raw,
-            arguments.output_filename
+            arguments.output_filename,
         )
 
-    elif arguments.command == 'similarity':
+    elif arguments.command == "similarity":
         similarity(
             arguments.input_filenames,
             arguments.plot,
             arguments.cluster,
-            arguments.output_filename
+            arguments.output_filename,
         )
 
 
